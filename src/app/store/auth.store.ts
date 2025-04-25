@@ -1,73 +1,161 @@
 import { create } from 'zustand';
-import { User } from '@/entities/user'; // Импортируем реальный тип
-// import { authApi } from '@/features/auth'; // TODO: Импортировать реальное API авторизации
+import { jwtDecode } from 'jwt-decode'; // Import jwt-decode
+import { User } from '@/entities/user';
+import { getUserById } from '@/entities/user/api/user.api.ts'; // Import getUserById
+import { loginUser, logoutUser } from '@/features/auth/api/auth.api.ts';
+import { LoginRequestDto } from '@/features/auth/model/types';
+import { decode } from 'punycode';
 
-interface AuthState {
-  user: User | null;
-  // TODO: Добавить isLoading, error состояния
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>; // Сделаем logout асинхронным на всякий случай
-  checkAuth: () => Promise<void>; // Метод для проверки авторизации при загрузке
+// Interface for decoded token payload (adjust based on backend claims)
+interface DecodedToken {
+  userId: string;
+  email: string;
+  // Add other claims like exp, iat if needed
+  exp: number;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+// Auth State Interface
+interface AuthState {
+  user: User | null;
+  token: string | null; // Access Token
+  refreshToken: string | null; // Added for potential refresh logic
+  isLoading: boolean;
+  error: string | null;
+  isAuthenticated: boolean;
+  login: (credentials: LoginRequestDto) => Promise<void>;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<void>;
+  clearError: () => void;
+}
+
+// Internal Actions Interface
+type AuthActions = {
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  // Updated to handle both tokens and fetch/set user
+  setSession: (accessToken: string | null, refreshToken: string | null) => Promise<void>; 
+  clearSession: () => void;
+};
+
+export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   user: null,
-  login: async (email, password) => {
-    console.log('Attempting login with:', email, password);
+  token: localStorage.getItem('authToken') || null,
+  refreshToken: localStorage.getItem('refreshToken') || null,
+  error: null,
+  isLoading: true, // Start loading true until checkAuth completes
+  isAuthenticated: false, // Assume not authenticated until checkAuth confirms
+
+  // Internal Actions Implementation
+  setLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
+
+  // Clears tokens, user, error and updates localStorage
+  clearSession: () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+    set({ user: null, token: null, refreshToken: null, isAuthenticated: false, error: null });
+  },
+
+  // Sets tokens, decodes access token, fetches user, updates state
+  setSession: async (accessToken, refreshTokenValue) => {
+
+    if (!accessToken) {
+        get().clearSession();
+        return;
+    }
+
     try {
-      // TODO: Заменить на реальный вызов API
-      // const userData = await authApi.login(email, password);
-      // set({ user: userData });
-      // Имитация успешного входа
-      await new Promise(resolve => setTimeout(resolve, 500));
-      set({ user: { id: 'mock-user-1', name: 'Test User', email: email } });
-      console.log('Login successful');
-    } catch (error) {
-      console.error('Login failed:', error);
-      // TODO: Обработать ошибку (например, установить error в state)
+        const decoded = jwtDecode<DecodedToken>(accessToken);
+        console.log(decoded);
+        // Optional: Check token expiry client-side (backend validation is still primary)
+        if (decoded.exp * 1000 < Date.now()) {
+            console.warn('Token expired on setSession');
+            get().clearSession();
+            throw new Error('Session expired');
+        }
+        localStorage.setItem('authToken', accessToken);
+        // Fetch full user details using userId from token
+        const userDetails = await getUserById(decoded.userId); 
+        if (refreshTokenValue) {
+            localStorage.setItem('refreshToken', refreshTokenValue);
+        }
+        set({ 
+            user: userDetails, 
+            token: accessToken, 
+            refreshToken: refreshTokenValue,
+            isAuthenticated: true, 
+            error: null 
+        });
+
+    } catch (error: any) {
+        console.error('Error setting session (decode/fetch user):', error);
+        get().clearSession(); // Clear session if token is invalid or user fetch fails
+        // Optionally set an error message
+        set({ error: 'Failed to initialize session. Please login again.' });
     }
   },
+
+  // Core Authentication Logic
+  login: async (credentials) => {
+    get().setLoading(true);
+    get().setError(null);
+    try {
+      // Login returns { accessToken, refreshToken }
+      const { accessToken, refreshToken } = await loginUser(credentials);
+      // setSession handles decoding token, fetching user, and setting state
+      await get().setSession(accessToken, refreshToken);
+    } catch (err: any) {
+      const message = err.response?.data?.message || err.message || 'Login failed';
+      get().setError(message);
+      get().clearSession(); // Ensure session is cleared on login failure
+      console.error('Login error:', message);
+      throw new Error(message); // Re-throw for component handling
+    } finally {
+      get().setLoading(false);
+    }
+  },
+
   logout: async () => {
-    console.log('Attempting logout');
+    get().setLoading(true);
     try {
-      // TODO: Заменить на реальный вызов API
-      // await authApi.logout();
-      await new Promise(resolve => setTimeout(resolve, 300));
-      set({ user: null });
-      console.log('Logout successful');
-    } catch (error) {
-      console.error('Logout failed:', error);
-      // TODO: Обработать ошибку
+       await logoutUser(); // Optional backend call
+    } catch (err: any) {
+      console.error('Logout error (server call failed):', err.message);
+    } finally {
+        // Always clear client-side session regardless of backend call success
+       get().clearSession(); 
+       set({ isLoading: false }); // Set loading false after clearing session
     }
   },
+
   checkAuth: async () => {
-    console.log('Checking auth status...');
+    get().setError(null); // Clear any previous errors
+    const currentToken = get().token;
+    const currentRefreshToken = get().refreshToken; // Keep track for potential refresh
+
+    if (!currentToken) {
+        set({ isLoading: false, isAuthenticated: false }); // Not loading, not authenticated
+        return;
+    }
+
+    get().setLoading(true);
     try {
-      // TODO: Заменить на реальный вызов API для проверки токена/сессии
-      // const userData = await authApi.refresh(); // или getMe()
-      // set({ user: userData });
-      // Имитация проверки (например, токен в localStorage)
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const maybeUser = localStorage.getItem('mockUser'); // Пример
-      if (maybeUser) {
-        set({ user: JSON.parse(maybeUser) });
-        console.log('Auth check successful');
-      } else {
-        console.log('No active session found');
-      }
+        // Attempt to set session using the existing token
+        // This will decode, check expiry (basic), fetch user, and update state
+        await get().setSession(currentToken, currentRefreshToken); 
+        // If setSession succeeds, state (user, isAuthenticated) is updated internally
     } catch (error) {
-      console.error('Auth check failed:', error);
-      set({ user: null }); // Гарантированно сбрасываем пользователя при ошибке
+        // setSession handles clearing the session on error internally
+        console.error('checkAuth failed:', error);
+        // TODO: Implement token refresh logic here if currentToken is expired but refreshToken is valid
+        // For now, if setSession fails, we remain logged out.
+    } finally {
+        set({ isLoading: false });
     }
   },
+
+  clearError: () => set({ error: null }),
 }));
 
-// Пример сохранения/удаления мокового пользователя в localStorage для checkAuth
-useAuthStore.subscribe((state, prevState) => {
-  if (state.user && !prevState.user) {
-    localStorage.setItem('mockUser', JSON.stringify(state.user));
-  }
-  if (!state.user && prevState.user) {
-    localStorage.removeItem('mockUser');
-  }
-}); 
+// Call checkAuth when the app loads (e.g., in index.tsx or App.tsx)
+// useAuthStore.getState().checkAuth(); 

@@ -1,18 +1,37 @@
-import axiosInstance from '@/shared/api/axios';
-import { Task } from '../model/types';
+import apiClient from '@/shared/api/axios';
+// Import specific DTOs along with Task type
+import { Task, TaskStatus, TaskCreateDto, TaskUpdateDto, TaskDeleteDto } from '../model/types';
 
-// TODO: Добавить обработку параметров фильтрации и сортировки
+// DTO definitions removed as they are now imported from model/types.ts
+
+// Fetch tasks for a specific user
+// Corresponds to GET /api/task/user/{userId}
 export const fetchTasks = async (userId: string): Promise<Task[]> => {
-  // При необходимости можно передавать параметры фильтрации/сортировки
-  // const params = { status: filters.status, dueDate: filters.dueDate, sortBy: sortBy };
-  const response = await axiosInstance.get<Task[]>(`/tasks/user/${userId}`/* , { params } */);
-  // Важно: API путь `/api/task/user/{userId}` из ТЗ изменен на `/tasks/user/{userId}`
-  // Уточните реальный эндпоинт у бэкенда.
-  // Также путь /api/ убран, т.к. он уже есть в baseURL axiosInstance
+  // TODO: Add parameters for server-side filtering/sorting if implemented based on backend endpoints
+  // e.g., GET /api/task/user/{userId}/status/{status}, /sorted?sortBy=..., /search?searchTerm=...
+  const response = await apiClient.get<Task[]>(`/task/user/${userId}`);
   return response.data;
 };
 
-// TODO: Реализовать остальные методы API (create, update, delete)
-// export const createTask = async (taskData: CreateTaskDto): Promise<Task> => { ... };
-// export const updateTask = async (taskId: string, taskData: UpdateTaskDto): Promise<Task> => { ... };
-// export const deleteTask = async (taskId: string): Promise<void> => { ... }; 
+// Create a new task
+// Corresponds to POST /api/task/create
+export const createTask = async (taskData: TaskCreateDto): Promise<Task> => {
+  const response = await apiClient.post<Task>('/task/create', taskData);
+  return response.data;
+};
+
+// Update an existing task
+// Corresponds to PUT /api/task/update
+export const updateTask = async (taskData: TaskUpdateDto): Promise<Task> => {
+  // Backend expects TaskUpdateRequestDto in the body
+  const response = await apiClient.put<Task>('/task/update', taskData);
+  return response.data;
+};
+
+// Delete a task
+// Corresponds to POST /api/task/delete
+export const deleteTask = async (deleteData: TaskDeleteDto): Promise<Task> => {
+  // Backend returns the deleted task
+  const response = await apiClient.post<Task>('/task/delete', deleteData);
+  return response.data; // Return deleted task as per backend controller
+}; 

@@ -1,21 +1,24 @@
-// Базовый тип пользователя
+// Based on UserResponseDto from backend
 export interface User {
-  id: string;
-  name: string;
-  lastName?: string; // Добавим опциональную фамилию
+  id: string; // Guid maps to string
+  firstName: string; // Changed from name
+  secondName?: string; // Changed from lastName
   email: string;
-  // Можно добавить другие поля, например, createdAt, updatedAt
+  roleId: number;
+  createdAt: string; // DateTime maps to string (ISO format expected)
+  // NOTE: Backend User model might have more fields (e.g., PasswordHash, Token)
+  // but these are typically not included in response DTOs sent to the frontend.
 }
 
-// Тип для формы обновления профиля (пример)
+// Based on UserUpdateRequestDto from backend controller/service
 export interface UserUpdateDto {
-  name: string;
-  lastName?: string;
-  email: string;
-  // Пароль обычно передается отдельно или в другом DTO для безопасности
+  userId: string; // Required by backend service/controller logic (though path might be implicit)
+  firstName?: string;
+  secondName?: string;
+  email?: string; // Backend allows updating email
 }
 
-// Тип для формы смены пароля (пример)
+// Based on PasswordUpdateRequestDto used in UserController
 export interface ChangePasswordDto {
   currentPassword: string;
   newPassword: string;

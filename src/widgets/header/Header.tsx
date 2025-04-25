@@ -29,8 +29,8 @@ export const Header: React.FC = () => {
     <Box sx={{ width: 250 }} role="presentation" onClick={handleDrawerToggle} onKeyDown={handleDrawerToggle}>
       <List>
         {[ // Массив для элементов меню
-          { text: 'Tasks', path: '/tasks', icon: <TaskIcon /> },
-          { text: 'Profile', path: '/profile', icon: <AccountCircleIcon /> },
+          { text: 'Задачи', path: '/tasks', icon: <TaskIcon /> },
+          { text: 'Профиль', path: '/profile', icon: <AccountCircleIcon /> },
         ].map((item) => (
           <ListItem key={item.text} disablePadding>
             <ListItemButton component={RouterLink} to={item.path}>
@@ -60,7 +60,7 @@ export const Header: React.FC = () => {
           TaskManager
         </Typography>
 
-        <Tooltip title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+        <Tooltip title={isDark ? "Переключить на светлую тему" : "Переключить на темную тему"}>
           <IconButton sx={{ ml: 1 }} onClick={toggleTheme} color="inherit">
             {isDark ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
@@ -68,7 +68,10 @@ export const Header: React.FC = () => {
 
         {user ? (
           <>
-            <Tooltip title="Profile">
+            <Typography sx={{ ml: 2, display: { xs: 'none', sm: 'block' } }}>
+               {user.email} 
+            </Typography>
+            <Tooltip title="Профиль">
               <IconButton
                  color="inherit"
                  component={RouterLink}
@@ -78,15 +81,15 @@ export const Header: React.FC = () => {
                 <AccountCircleIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Logout">
+            <Tooltip title="Выйти">
               <IconButton color="inherit" onClick={handleLogout} sx={{ ml: 1 }}>
                 <ExitToAppIcon />
               </IconButton>
              </Tooltip>
           </>
         ) : (
-          <Button color="inherit" component={RouterLink} to="/"> {/* TODO: Ссылка на страницу логина */} 
-            Login
+          <Button color="inherit" component={RouterLink} to="/login"> 
+            Войти
           </Button>
         )}
       </Toolbar>
