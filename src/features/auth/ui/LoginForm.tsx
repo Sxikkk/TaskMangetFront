@@ -1,7 +1,8 @@
 import React from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { TextField, Button, Box, Alert, CircularProgress } from '@mui/material';
+import {TextField, Button, Box, Alert, CircularProgress, Typography} from '@mui/material';
 import { LoginRequestDto } from '../model/types';
+import {Link} from "react-router-dom";
 
 interface LoginFormProps {
   onSubmit: (data: LoginRequestDto) => Promise<void>; // Expects the login action from the store
@@ -55,7 +56,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading, error
         helperText={errors.password?.message}
         disabled={isLoading}
       />
-      {/* TODO: Add remember me checkbox if needed */}
       <Button
         type="submit"
         fullWidth
@@ -65,7 +65,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading, error
       >
         {isLoading ? <CircularProgress size={24} /> : 'Войти'}
       </Button>
-      {/* TODO: Add links for forgot password or sign up if needed */}
+        <Typography variant='body1'>Нет аккаунта? <Link to={'/registration'}>Зарегистрируйтесь</Link></Typography>
     </Box>
   );
 }; 

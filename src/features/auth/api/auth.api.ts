@@ -1,5 +1,5 @@
 import apiClient from '@/shared/api/axios';
-import { LoginRequestDto, LoginResponseDto, RefreshRequestDto } from '../model/types';
+import { LoginRequestDto, LoginResponseDto, RefreshRequestDto, RegistrationRequestDto } from '../model/types';
 
 export const loginUser = async (credentials: LoginRequestDto): Promise<LoginResponseDto> => {
   const response = await apiClient.post<LoginResponseDto>('/login', credentials);
@@ -16,3 +16,9 @@ export const refreshTokenApiCall = async (refreshData: RefreshRequestDto): Promi
   const response = await apiClient.post<LoginResponseDto>('/refresh', refreshData);
   return response.data;
 }; 
+
+export const registerUser = async (credentials: RegistrationRequestDto): Promise<LoginResponseDto> => {
+  console.log(credentials);
+  const response = await apiClient.post<LoginResponseDto>('/registration', credentials);
+  return response.data;
+}

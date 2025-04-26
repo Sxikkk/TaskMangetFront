@@ -11,6 +11,7 @@ export const mapTaskStatusToBackend = (status: TaskStatus): number => {
     case TaskStatus.TODO: return 0;
     case TaskStatus.IN_PROGRESS: return 1;
     case TaskStatus.DONE: return 2;
+    case TaskStatus.ARCHIVED: return 3;
     default: 
       console.warn(`Unknown TaskStatus to map to backend: ${status}`);
       return 0; // Default to TODO or handle as error
@@ -26,6 +27,7 @@ export const mapTaskStatusFromBackend = (value: number | undefined | null): Task
       case 0: return TaskStatus.TODO;
       case 1: return TaskStatus.IN_PROGRESS;
       case 2: return TaskStatus.DONE;
+      case 3: return TaskStatus.ARCHIVED;
       default:
         console.warn(`Unknown backend status code to map to frontend: ${value}`);
         return TaskStatus.TODO; // Default to TODO or handle as error

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Box, Typography, Paper } from '@mui/material';
+import { Container, Typography, Paper } from '@mui/material';
 import { useAuthStore } from '@/app/store/auth.store';
 import { LoginForm } from '@/features/auth/ui/LoginForm';
 import { LoginRequestDto } from '@/features/auth/model/types';
@@ -9,14 +9,12 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login, isLoading, error, isAuthenticated, clearError } = useAuthStore();
 
-  // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/tasks', { replace: true }); // Or to the intended page after login
+      navigate('/tasks', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
-  // Clear error when component mounts or unmounts
   useEffect(() => {
     clearError();
     return () => {
@@ -27,9 +25,7 @@ const LoginPage: React.FC = () => {
   const handleLoginSubmit = async (data: LoginRequestDto) => {
     try {
         await login(data);
-        // Navigation is handled by the useEffect hook above
     } catch (loginError) {
-        // Error is already set in the store by the login action
         console.error("Login attempt failed in component:", loginError);
     }
   };
@@ -50,4 +46,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage; // Default export for lazy loading 
+export default LoginPage;

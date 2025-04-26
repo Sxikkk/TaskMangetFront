@@ -2,9 +2,10 @@ import { create } from 'zustand';
 import { jwtDecode } from 'jwt-decode'; // Import jwt-decode
 import { User } from '@/entities/user';
 import { getUserById } from '@/entities/user/api/user.api.ts'; // Import getUserById
-import { loginUser, logoutUser } from '@/features/auth/api/auth.api.ts';
-import { LoginRequestDto } from '@/features/auth/model/types';
+import { loginUser, registerUser } from '@/features/auth/api/auth.api.ts';
+import { LoginRequestDto, RegistrationRequestDto } from '@/features/auth/model/types';
 import { decode } from 'punycode';
+import { ref } from 'process';
 
 // Interface for decoded token payload (adjust based on backend claims)
 interface DecodedToken {
@@ -24,6 +25,7 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (credentials: LoginRequestDto) => Promise<void>;
   logout: () => Promise<void>;
+  registration: (credentials: RegistrationRequestDto) => Promise<void>;
   checkAuth: () => Promise<void>;
   clearError: () => void;
 }
@@ -100,9 +102,7 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     get().setLoading(true);
     get().setError(null);
     try {
-      // Login returns { accessToken, refreshToken }
       const { accessToken, refreshToken } = await loginUser(credentials);
-      // setSession handles decoding token, fetching user, and setting state
       await get().setSession(accessToken, refreshToken);
     } catch (err: any) {
       const message = err.response?.data?.message || err.message || 'Login failed';
@@ -114,18 +114,26 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
       get().setLoading(false);
     }
   },
-
+  registration: async (credentials) => {
+      get().setLoading(true);
+      get().setError(null);
+      try{
+          const { accessToken, refreshToken } = await registerUser(credentials);
+          await get().setSession(accessToken, refreshToken);
+      } catch (e: any) {
+          const message = e.response?.data?.message || e.message || 'Registration failed'
+          get().setError(message);
+          get().clearSession();
+          console.log('Reg error:', message);
+          throw new Error(message);
+      } finally {
+        get().setLoading(false);
+      }
+  },
   logout: async () => {
     get().setLoading(true);
-    try {
-       await logoutUser(); // Optional backend call
-    } catch (err: any) {
-      console.error('Logout error (server call failed):', err.message);
-    } finally {
-        // Always clear client-side session regardless of backend call success
-       get().clearSession(); 
-       set({ isLoading: false }); // Set loading false after clearing session
-    }
+    get().clearSession(); 
+    set({ isLoading: false });
   },
 
   checkAuth: async () => {

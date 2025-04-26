@@ -87,7 +87,7 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     const taskData: TaskCreateDto = { 
         userId,
         title: formData.title,
-        description: formData.description || undefined,
+        description: formData.description,
         status: mapTaskStatusToBackend(formData.status), // Map status
         dueDate: formData.dueDate ? formData.dueDate.toISOString() : null 
     };
