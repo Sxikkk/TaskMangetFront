@@ -88,7 +88,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit, is
         type="password"
         id="password"
         autoComplete="current-password"
-        {...register("password", { required: "Пароль обязателен" })}
+        {...register("password", { required: "Пароль обязателен и должен быть не менее 6 символов", minLength: { message: "Минимум 6 символов", value: 6}})}
         error={!!errors.password}
         helperText={errors.password?.message}
         disabled={isLoading}

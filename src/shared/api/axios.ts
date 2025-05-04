@@ -2,8 +2,7 @@ import axios, { InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/app/store/auth.store'; // Import store to get state and actions
 import { refreshTokenApiCall } from '@/features/auth/api/auth.api'; // Import refresh API call
 
-// TODO: Replace with your actual API base URL from environment variables or config
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
