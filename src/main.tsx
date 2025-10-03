@@ -13,7 +13,7 @@ const ThemedApp = () => {
   return (
     <ThemeProvider theme={theme}>
         <Container>
-            <CssBaseline /> //lol shpuk
+            {/* <CssBaseline /> not spulka */}
             <AppRouter />
         </Container>
     </ThemeProvider>
