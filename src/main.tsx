@@ -13,7 +13,7 @@ const ThemedApp = () => {
   return (
     <ThemeProvider theme={theme}>
         <Container>
-            <CssBaseline /> {/* Сброс стилей и базовые настройки фона */}
+            <CssBaseline /> //lol shpuk
             <AppRouter />
         </Container>
     </ThemeProvider>
