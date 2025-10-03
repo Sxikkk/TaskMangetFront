@@ -143,7 +143,7 @@ export const ProfilePage: React.FC = () => {
     <Box sx={{ maxWidth: 600, margin: 'auto', mt: 4 }}>
       <Typography variant="h4" gutterBottom>Профиль</Typography>
       <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
-        Добро пожаловать, {user.firstName} ({user.email})
+        Bobro пожаловать, {user.firstName} ({user.email})
       </Typography>
 
       {/* Update Profile Form */} 
